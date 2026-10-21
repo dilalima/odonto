@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Agende o seu procedimento | Odonto Emille{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Atendimento odontológico</p>
+  <h1>Agende o seu procedimento</h1>
+  <p>Escolha o procedimento, o melhor dia e horário. A doutora Emille espera por você.</p>
+</section>
+<section class="card">
+  <h2>Seus dados e horário</h2>
+  <form method="post" action="{{ url_for('main.book') }}" class="booking-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Nome completo
+      <input name="full_name" type="text" autocomplete="name" maxlength="160" required>
+    </label>
+    <label>Idade
+      <input name="age" type="number" min="1" max="120" required>
+    </label>
+    <label>WhatsApp com DDD
+      <input name="phone" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" required>
+    </label>
+    <label>Procedimento
+      <select name="procedure" required>
+        <option value="">Selecione</option>
+        {% for procedure in procedures %}
+          <option value="{{ procedure }}">{{ procedure }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Dia disponível
+      <select name="appointment_date" id="appointment-date" required>
+        <option value="">Selecione</option>
+        {% for day in available_days %}
+          <option value="{{ day.isoformat() }}">{{ weekday_names[day.weekday()] }} — {{ day.strftime("%d/%m/%Y") }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Horário disponível
+      <select name="appointment_time" id="appointment-time" required disabled>
+        <option value="">Primeiro escolha um dia</option>
+      </select>
+    </label>
+    <button type="submit">Confirmar agendamento</button>
+  </form>
+</section>
+<p class="whatsapp-note">Informe seu WhatsApp com DDD. A doutora usará esse contato para confirmar ou orientar seu atendimento.</p>
+<script>
+  const dateSelect = document.getElementById("appointment-date");
+  const timeSelect = document.getElementById("appointment-time");
+  dateSelect.addEventListener("change", async () => {
+    timeSelect.innerHTML = '<option value="">Carregando...</option>';
+    timeSelect.disabled = true;
+    if (!dateSelect.value) {
+      timeSelect.innerHTML = '<option value="">Primeiro escolha um dia</option>';
+      return;
+    }
+    const response = await fetch(`/api/horarios?data=${encodeURIComponent(dateSelect.value)}`);
+    const result = await response.json();
+    timeSelect.innerHTML = '<option value="">Selecione</option>';
+    for (const horario of result.horarios || []) {
+      const option = document.createElement("option");
+      option.value = horario;
+      option.textContent = horario;
+      timeSelect.appendChild(option);
+    }
+    if (!result.horarios?.length) {
+      timeSelect.innerHTML = '<option value="">Sem horários disponíveis</option>';
+    }
+    timeSelect.disabled = !result.horarios?.length;
+  });
+</script>
+{% endblock %}

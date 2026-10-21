@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Agenda | Odonto Emille{% endblock %}
+{% block content %}
+<div class="dashboard-heading">
+  <div><p class="eyebrow">Painel da doutora</p><h1>Agenda da doutora Emille</h1></div>
+  <form method="post" action="{{ url_for('main.doctor_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="secondary" type="submit">Sair</button></form>
+</div>
+<section class="card">
+  <h2>Agendamentos confirmados</h2>
+  {% if appointments %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Horário</th><th>Paciente</th><th>WhatsApp</th><th>Idade</th><th>Procedimento</th><th>Origem</th><th>Ação</th></tr></thead>
+        <tbody>
+          {% for appointment in appointments %}
+            <tr>
+              <td>{{ format_date(appointment.appointment_date) }}</td>
+              <td>{{ format_time(appointment.appointment_time) }}</td>
+              <td>{{ appointment.full_name }}</td>
+              <td>{% if appointment.phone %}<a href="https://wa.me/{{ appointment.phone }}" target="_blank" rel="noopener">{{ appointment.phone }}</a>{% else %}Não informado{% endif %}</td>
+              <td>{{ appointment.age }}</td>
+              <td>{{ appointment.procedure }}</td>
+              <td>{{ appointment.source|capitalize }}</td>
+              <td>
+                <form method="post" action="{{ url_for('main.doctor_cancel', appointment_id=appointment.id) }}" onsubmit="return confirm('Cancelar este atendimento? O dia ficará disponível novamente.');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button class="danger" type="submit">Cancelar</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>Nenhum agendamento confirmado.</p>
+  {% endif %}
+</section>
+<section class="card">
+  <h2>Solicitações para retorno</h2>
+  {% if contact_requests %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Paciente</th><th>Telefone</th><th>Data solicitada</th><th>Procedimento</th></tr></thead>
+        <tbody>
+          {% for request in contact_requests %}
+            <tr><td>{{ request.full_name }}</td><td><a href="https://wa.me/{{ request.phone }}" target="_blank" rel="noopener">{{ request.phone }}</a></td><td>{{ format_date(request.requested_date) }}</td><td>{{ request.procedure }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>Nenhuma solicitação pendente.</p>
+  {% endif %}
+</section>
+<section class="card">
+  <h2>Adicionar atendimento manual</h2>
+  <form method="post" action="{{ url_for('main.doctor_book') }}" class="booking-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Nome completo
+      <input name="full_name" type="text" maxlength="160" required>
+    </label>
+    <label>Idade
+      <input name="age" type="number" min="1" max="120" required>
+    </label>
+    <label>WhatsApp com DDD
+      <input name="phone" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" required>
+    </label>
+    <label>Procedimento
+      <select name="procedure" required>
+        <option value="">Selecione</option>
+        {% for procedure in procedures %}<option value="{{ procedure }}">{{ procedure }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Data disponível
+      <select name="appointment_date" id="doctor-appointment-date" required>
+        <option value="">Selecione</option>
+        {% for day in availability %}
+          <option value="{{ day.date.isoformat() }}">{{ format_date(day.date) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Horário
+      <select name="appointment_time" id="doctor-appointment-time" required disabled>
+        <option value="">Primeiro escolha um dia</option>
+      </select>
+    </label>
+    <button type="submit">Adicionar agendamento</button>
+  </form>
+</section>
+<section class="card">
+  <h2>Dias e horários livres (próximos 30 dias)</h2>
+  {% if availability %}
+    <ul class="availability-list">
+      {% for day in availability %}
+        <li><strong>{{ format_date(day.date) }}</strong><span>{% for slot in day.times %}{{ format_time(slot) }}{% if not loop.last %}, {% endif %}{% endfor %}</span></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Não há horários livres nesse período.</p>
+  {% endif %}
+</section>
+<script>
+  const doctorDateSelect = document.getElementById("doctor-appointment-date");
+  const doctorTimeSelect = document.getElementById("doctor-appointment-time");
+  doctorDateSelect.addEventListener("change", async () => {
+    doctorTimeSelect.innerHTML = '<option value="">Carregando...</option>';
+    doctorTimeSelect.disabled = true;
+    if (!doctorDateSelect.value) {
+      doctorTimeSelect.innerHTML = '<option value="">Primeiro escolha um dia</option>';
+      return;
+    }
+    const response = await fetch(`/api/horarios?data=${encodeURIComponent(doctorDateSelect.value)}`);
+    const result = await response.json();
+    doctorTimeSelect.innerHTML = '<option value="">Selecione</option>';
+    for (const horario of result.horarios || []) {
+      const option = document.createElement("option");
+      option.value = horario;
+      option.textContent = horario;
+      doctorTimeSelect.appendChild(option);
+    }
+    if (!result.horarios?.length) {
+      doctorTimeSelect.innerHTML = '<option value="">Sem horários disponíveis</option>';
+    }
+    doctorTimeSelect.disabled = !result.horarios?.length;
+  });
+</script>
+{% endblock %}
