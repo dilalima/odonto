@@ -1,6 +1,6 @@
 # Odonto Emille
 
-Sistema web de agendamento odontológico desenvolvido como projeto educacional por uma estudante de Odontologia.
+Sistema web de agendamento odontológico desenvolvido como projeto educacional para uma estudante de Odontologia.
 
 O projeto reúne uma página pública para pacientes, um painel protegido para a doutora e uma integração opcional com a WhatsApp Cloud API.
 
