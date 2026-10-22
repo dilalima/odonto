@@ -51,6 +51,24 @@ def test_days_are_filtered_by_procedure(client):
     )
 
 
+def test_shared_day_is_available_for_each_allowed_procedure(client):
+    for procedure in ("Limpeza", "Raspagem", "Restauração"):
+        response = client.get(
+            f"/api/dias?procedimento={procedure}"
+        )
+        days = response.get_json()["dias"]
+        assert any(date.fromisoformat(item["data"]).weekday() == 2 for item in days)
+
+
+def test_date_change_does_not_rebuild_procedure_field(client):
+    html = client.get("/").get_data(as_text=True)
+    date_change_script = html.split(
+        'dateSelect.addEventListener("change"', 1
+    )[1]
+
+    assert "procedureSelect.innerHTML" not in date_change_script
+
+
 def test_form_without_csrf_is_rejected(client):
     response = client.post(
         "/doutora/login",

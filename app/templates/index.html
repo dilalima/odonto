@@ -81,13 +81,6 @@
     }
     const response = await fetch(`/api/horarios?data=${encodeURIComponent(dateSelect.value)}`);
     const result = await response.json();
-    procedureSelect.innerHTML = '<option value="">Selecione</option>';
-    for (const procedimento of result.procedimentos || []) {
-      const option = document.createElement("option");
-      option.value = procedimento;
-      option.textContent = procedimento;
-      procedureSelect.appendChild(option);
-    }
     timeSelect.innerHTML = '<option value="">Selecione</option>';
     for (const horario of result.horarios || []) {
       const option = document.createElement("option");
