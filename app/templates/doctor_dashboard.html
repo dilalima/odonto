@@ -67,7 +67,7 @@
       <input name="phone" type="tel" placeholder="(11) 99999-9999" autocomplete="tel" required>
     </label>
     <label>Procedimento
-      <select name="procedure" required>
+      <select name="procedure" id="doctor-procedure" required>
         <option value="">Selecione</option>
         {% for procedure in procedures %}<option value="{{ procedure }}">{{ procedure }}</option>{% endfor %}
       </select>
@@ -102,6 +102,7 @@
 </section>
 <script>
   const doctorDateSelect = document.getElementById("doctor-appointment-date");
+  const doctorProcedureSelect = document.getElementById("doctor-procedure");
   const doctorTimeSelect = document.getElementById("doctor-appointment-time");
   doctorDateSelect.addEventListener("change", async () => {
     doctorTimeSelect.innerHTML = '<option value="">Carregando...</option>';
@@ -112,6 +113,13 @@
     }
     const response = await fetch(`/api/horarios?data=${encodeURIComponent(doctorDateSelect.value)}`);
     const result = await response.json();
+    doctorProcedureSelect.innerHTML = '<option value="">Selecione</option>';
+    for (const procedimento of result.procedimentos || []) {
+      const option = document.createElement("option");
+      option.value = procedimento;
+      option.textContent = procedimento;
+      doctorProcedureSelect.appendChild(option);
+    }
     doctorTimeSelect.innerHTML = '<option value="">Selecione</option>';
     for (const horario of result.horarios || []) {
       const option = document.createElement("option");

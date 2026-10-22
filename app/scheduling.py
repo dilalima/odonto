@@ -29,6 +29,17 @@ def get_available_times(day, config):
     ]
 
 
+def get_available_procedures(day, config):
+    if isinstance(day, str):
+        day = date.fromisoformat(day)
+    procedures_by_weekday = config.get("PROCEDURES_BY_WEEKDAY")
+    if procedures_by_weekday is None:
+        return list(config["PROCEDURES"])
+    return list(
+        procedures_by_weekday.get(day.weekday(), config["PROCEDURES"])
+    )
+
+
 def get_available_days(config, days_ahead=30):
     today = date.today()
     return [
@@ -50,7 +61,7 @@ def create_appointment(
     day = date.fromisoformat(appointment_date)
     slot = time.fromisoformat(appointment_time)
 
-    if procedure not in config["PROCEDURES"]:
+    if procedure not in get_available_procedures(day, config):
         raise ValueError("O procedimento selecionado não está disponível.")
     if slot not in get_available_times(day, config):
         raise ValueError("Esse horário acabou de ficar indisponível. Escolha outro.")

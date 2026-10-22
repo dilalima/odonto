@@ -21,6 +21,7 @@ from app.scheduling import (
     format_date,
     format_time,
     get_available_days,
+    get_available_procedures,
     get_available_times,
     normalize_phone,
 )
@@ -72,6 +73,7 @@ def api_times():
         return jsonify({"error": "Informe uma data válida."}), 400
     return jsonify(
         {
+            "procedimentos": get_available_procedures(day, current_app.config),
             "horarios": [
                 format_time(slot)
                 for slot in get_available_times(day, current_app.config)

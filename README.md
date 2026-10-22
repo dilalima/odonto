@@ -72,6 +72,13 @@ Os procedimentos e horários ficam em `config.py`:
 
 Segunda-feira corresponde a `0` e domingo a `6`. Dias ausentes ficam fechados.
 
+Agenda configurada atualmente:
+
+- Segunda-feira, às 08:00: limpeza e raspagem.
+- Terça-feira, às 14:00: restauração e extração.
+- Quarta-feira, às 14:00: restauração, raspagem e limpeza.
+- Sexta-feira, às 08:00: limpeza e raspagem.
+
 ## WhatsApp Cloud API
 
 A integração é opcional. Para mantê-la desativada, use:

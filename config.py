@@ -40,9 +40,16 @@ class Config:
 
     # Dias da semana: 0 = segunda-feira, 6 = domingo.
     # Edite os dias e horários de atendimento conforme a agenda da doutora.
+    PROCEDURES_BY_WEEKDAY = {
+        0: ["Limpeza", "Raspagem"],
+        1: ["Restauração", "Extração"],
+        2: ["Restauração", "Raspagem", "Limpeza"],
+        4: ["Limpeza", "Raspagem"],
+    }
+
     WORKING_HOURS = {
-        0: [time(9, 0)],
+        0: [time(8, 0)],
         1: [time(14, 0)],
-        3: [time(14, 0)],
-        4: [time(9, 0)],
+        2: [time(14, 0)],
+        4: [time(8, 0)],
     }

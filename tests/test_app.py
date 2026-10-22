@@ -109,7 +109,13 @@ def test_booking_route_blocks_second_booking_on_the_same_day(client):
         f"/api/horarios?data={appointment_day.isoformat()}"
     )
     assert available_response.status_code == 200
-    assert available_response.get_json() == {"horarios": ["09:00", "14:00"]}
+    expected_procedures = app.config["PROCEDURES_BY_WEEKDAY"].get(
+        appointment_day.weekday(), app.config["PROCEDURES"]
+    )
+    assert available_response.get_json() == {
+        "procedimentos": expected_procedures,
+        "horarios": ["09:00", "14:00"],
+    }
 
     response = client.post(
         "/agendar",
@@ -144,6 +150,26 @@ def test_booking_route_blocks_second_booking_on_the_same_day(client):
 
     with app.app_context():
         assert Appointment.query.filter_by(appointment_date=appointment_day).count() == 1
+
+
+def test_booking_rejects_procedure_outside_the_day_schedule(client):
+    app = client.application
+    days_until_monday = (7 - date.today().weekday()) % 7 or 7
+    appointment_day = date.today() + timedelta(days=days_until_monday)
+    app.config["WORKING_HOURS"] = {appointment_day.weekday(): [time(8, 0)]}
+
+    with app.app_context(), pytest.raises(ValueError, match="procedimento selecionado"):
+        create_appointment(
+            full_name="Maria Silva",
+            age=35,
+            procedure="Extração",
+            phone="5511999999999",
+            appointment_date=appointment_day.isoformat(),
+            appointment_time="08:00",
+            source="site",
+            config=app.config,
+        )
+        db.session.rollback()
 
 
 def test_doctor_can_cancel_and_reopen_the_day(client):
