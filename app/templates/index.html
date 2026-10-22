@@ -28,11 +28,8 @@
       </select>
     </label>
     <label>Dia disponível
-      <select name="appointment_date" id="appointment-date" required>
-        <option value="">Selecione</option>
-        {% for day in available_days %}
-          <option value="{{ day.isoformat() }}">{{ weekday_names[day.weekday()] }} — {{ day.strftime("%d/%m/%Y") }}</option>
-        {% endfor %}
+      <select name="appointment_date" id="appointment-date" required disabled>
+        <option value="">Primeiro escolha um procedimento</option>
       </select>
     </label>
     <label>Horário disponível
@@ -48,6 +45,33 @@
   const dateSelect = document.getElementById("appointment-date");
   const procedureSelect = document.getElementById("procedure");
   const timeSelect = document.getElementById("appointment-time");
+  const resetDates = () => {
+    dateSelect.innerHTML = '<option value="">Selecione</option>';
+    dateSelect.disabled = true;
+    timeSelect.innerHTML = '<option value="">Primeiro escolha um dia</option>';
+    timeSelect.disabled = true;
+  };
+  procedureSelect.addEventListener("change", async () => {
+    resetDates();
+    if (!procedureSelect.value) {
+      dateSelect.innerHTML = '<option value="">Primeiro escolha um procedimento</option>';
+      return;
+    }
+    const response = await fetch(`/api/dias?procedimento=${encodeURIComponent(procedureSelect.value)}`);
+    const result = await response.json();
+    dateSelect.innerHTML = '<option value="">Selecione</option>';
+    for (const dia of result.dias || []) {
+      const option = document.createElement("option");
+      const [year, month, day] = dia.data.split("-");
+      option.value = dia.data;
+      option.textContent = `${dia.dia_semana} — ${day}/${month}/${year}`;
+      dateSelect.appendChild(option);
+    }
+    if (!result.dias?.length) {
+      dateSelect.innerHTML = '<option value="">Sem dias disponíveis</option>';
+    }
+    dateSelect.disabled = !result.dias?.length;
+  });
   dateSelect.addEventListener("change", async () => {
     timeSelect.innerHTML = '<option value="">Carregando...</option>';
     timeSelect.disabled = true;

@@ -49,6 +49,14 @@ def get_available_days(config, days_ahead=30):
     ]
 
 
+def get_available_days_for_procedure(procedure, config, days_ahead=30):
+    return [
+        day
+        for day in get_available_days(config, days_ahead=days_ahead)
+        if procedure in get_available_procedures(day, config)
+    ]
+
+
 def create_appointment(
     *, full_name, age, procedure, phone, appointment_date, appointment_time, source, config
 ):

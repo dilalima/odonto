@@ -39,6 +39,18 @@ def test_health_check(client):
     assert response.get_json() == {"status": "ok"}
 
 
+def test_days_are_filtered_by_procedure(client):
+    response = client.get("/api/dias?procedimento=Limpeza")
+
+    assert response.status_code == 200
+    days = response.get_json()["dias"]
+    assert days
+    assert all(
+        date.fromisoformat(item["data"]).weekday() in {0, 2, 4}
+        for item in days
+    )
+
+
 def test_form_without_csrf_is_rejected(client):
     response = client.post(
         "/doutora/login",

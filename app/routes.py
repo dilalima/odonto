@@ -21,6 +21,7 @@ from app.scheduling import (
     format_date,
     format_time,
     get_available_days,
+    get_available_days_for_procedure,
     get_available_procedures,
     get_available_times,
     normalize_phone,
@@ -51,7 +52,7 @@ def index():
     return render_template(
         "index.html",
         procedures=config["PROCEDURES"],
-        available_days=get_available_days(config),
+        available_days=[],
         weekday_names=[
             "Segunda-feira",
             "Terça-feira",
@@ -61,6 +62,36 @@ def index():
             "Sábado",
             "Domingo",
         ],
+    )
+
+
+@main.get("/api/dias")
+def api_days():
+    procedure = request.args.get("procedimento", "")
+    if not procedure:
+        return jsonify({"dias": []})
+    days = get_available_days_for_procedure(
+        procedure, current_app.config, days_ahead=30
+    )
+    weekday_names = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado",
+        "Domingo",
+    ]
+    return jsonify(
+        {
+            "dias": [
+                {
+                    "data": day.isoformat(),
+                    "dia_semana": weekday_names[day.weekday()],
+                }
+                for day in days
+            ]
+        }
     )
 
 
